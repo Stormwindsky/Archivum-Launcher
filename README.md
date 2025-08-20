@@ -7,8 +7,6 @@ Roblox versions from 2007-2009 by automating Wine setup, dependencies, and clien
 
 # ================
 
-# Project Licensing
-
 # Archivum Launcher
 Developed and licensed by: Stormwindsky
 License: GNU General Public License v3.0
