@@ -33,7 +33,7 @@ class App(tk.Tk):
         super().__init__()
 
         self.title("Archivum Launcher")
-        self.geometry("450x450")  # Increased height to accommodate the new button
+        self.geometry("450x450")
         self.create_widgets()
         # Set the default version
         self.version_var.set("Mid 2007")
@@ -72,10 +72,9 @@ class App(tk.Tk):
         open_folder_button = ttk.Button(main_frame, text="3. Open Client Folder", command=self.open_folder)
         open_folder_button.pack(pady=10, fill="x")
         
-        fix_camera_button = ttk.Button(main_frame, text="4. Fix Camera & Mouse", command=self.run_camera_fix)
-        fix_camera_button.pack(pady=10, fill="x")
-
-        credits_button = ttk.Button(main_frame, text="5. Credits", command=self.show_credits)
+        # The 'Fix Camera & Mouse' button has been removed from this section.
+        
+        credits_button = ttk.Button(main_frame, text="4. Credits", command=self.show_credits)
         credits_button.pack(pady=10, fill="x")
         
         self.status_label = ttk.Label(main_frame, text="Status: Ready", foreground="blue")
@@ -196,51 +195,8 @@ class App(tk.Tk):
             messagebox.showerror("Error", "Please select a version.")
             return
 
-        # Intercept for Late 2009 client
-        if selected_version == "Late 2009":
-            popup = tk.Toplevel(self)
-            popup.title("Camera Bug Warning")
-            popup.geometry("450x250")
-            popup.resizable(False, False)
-
-            message_frame = ttk.Frame(popup, padding="20")
-            message_frame.pack(expand=True, fill="both")
-
-            title_label = ttk.Label(message_frame, text="Important Notice", font=("Helvetica", 14, "bold"))
-            title_label.pack(pady=10)
-
-            message_text = (
-                "The Late 2009 client version is currently affected by a significant camera position bug on Wine. "
-                "The creator, Stormwindsky, is actively seeking a solution. If you have any advice or wish to collaborate, "
-                "please contact:\n\n"
-            )
-            message_label = ttk.Label(message_frame, text=message_text, wraplength=400, justify="center")
-            message_label.pack(pady=5)
-
-            # Hyperlink to BlueSky
-            bluesky_link = tk.Label(message_frame, text="stormwindsky.bsky.social", fg="blue", cursor="hand2")
-            bluesky_link.pack()
-            bluesky_link.bind("<Button-1>", lambda e: webbrowser.open("https://bsky.app/profile/stormwindsky.bsky.social"))
-
-            # Hyperlink to GameJolt
-            gamejolt_link = tk.Label(message_frame, text="https://gamejolt.com/@Stormwindsky", fg="blue", cursor="hand2")
-            gamejolt_link.pack()
-            gamejolt_link.bind("<Button-1>", lambda e: webbrowser.open("https://gamejolt.com/@Stormwindsky"))
-
-            button_frame = ttk.Frame(message_frame)
-            button_frame.pack(pady=20)
-            
-            # The "Continue Anyway" button
-            continue_button = ttk.Button(button_frame, text="Continue Anyway", command=lambda: self.proceed_with_launch(popup))
-            continue_button.pack(side="left", padx=10)
-            
-            # The "Go Back" button
-            cancel_button = ttk.Button(button_frame, text="Go Back", command=popup.destroy)
-            cancel_button.pack(side="left", padx=10)
-
-            # Wait for the popup to be closed before continuing
-            self.wait_window(popup)
-            return
+        # The specific popup for the 2009 client has been removed.
+        # The game will now launch directly for all versions.
 
         app_folder = self.download_and_extract(selected_version)
         if not app_folder:
@@ -264,10 +220,6 @@ class App(tk.Tk):
         os.environ['WINEPREFIX'] = wine_prefix_path
         self.run_command(f"wine \"{APP_PATH}\"", f"Starting the game for {selected_version}")
         self.set_status("Game launched. Check terminal for output.", "blue")
-
-    def proceed_with_launch(self, popup):
-        popup.destroy()
-        self.run_play_threaded()
 
     def show_credits(self):
         credits_window = tk.Toplevel(self)
@@ -335,61 +287,10 @@ This launcher would not be possible without the following open-source projects a
         except Exception as e:
             messagebox.showerror("Error", f"Failed to open folder: {e}")
             self.set_status("Error opening folder.", "red")
-
-    def run_camera_fix(self):
-        wine_prefix_path = os.path.expanduser(f"~/{WINE_PREFIX_NAME}")
-        if not os.path.exists(wine_prefix_path):
-            messagebox.showerror("Error", "Wine prefix not found. Please run 'Install/Update' first.")
-            return
-
-        # Check for all fixes
-        mwo_check_command = f"WINEPREFIX={wine_prefix_path} wine reg query 'HKEY_CURRENT_USER\Software\Wine\DirectInput' /v MouseWarpOverride"
-        dinput_check_command = f"WINEPREFIX={wine_prefix_path} wine reg query 'HKEY_CURRENT_USER\Software\Wine\AppDefaults\RobloxApp.exe\DllOverrides' /v dinput"
-        virtualdesktop_check_command = f"WINEPREFIX={wine_prefix_path} wine reg query 'HKEY_CURRENT_USER\Software\Wine\Desktop' /v Default"
-
-        try:
-            # Check for mwo fix
-            mwo_process = subprocess.run(mwo_check_command, shell=True, capture_output=True, text=True, errors='ignore')
-            mwo_applied = "force" in mwo_process.stdout
             
-            # Check for dinput fix
-            dinput_process = subprocess.run(dinput_check_command, shell=True, capture_output=True, text=True, errors='ignore')
-            dinput_applied = "builtin" in dinput_process.stdout or "native,builtin" in dinput_process.stdout
+    # The 'run_camera_fix' function has been completely removed.
+    # Its button has also been removed from the create_widgets method.
 
-            # Check for virtual desktop
-            virtualdesktop_process = subprocess.run(virtualdesktop_check_command, shell=True, capture_output=True, text=True, errors='ignore')
-            virtualdesktop_applied = "Desktop" in virtualdesktop_process.stdout and "Default" in virtualdesktop_process.stdout
-
-            if mwo_applied and dinput_applied and virtualdesktop_applied:
-                # All fixes are applied, ask user if they want to remove them
-                if messagebox.askyesno("Remove Fixes?", "Are you sure you want to remove these fixes? They are designed to improve Roblox's performance on Wine. Note: You will need to manually disable the virtual desktop in winecfg."):
-                    # Remove mwo fix
-                    mwo_remove_command = f"WINEPREFIX={wine_prefix_path} winetricks mwo=disable"
-                    self.run_command(mwo_remove_command, "Removing MouseWarpOverride fix")
-
-                    # Remove dinput override
-                    dinput_remove_command = f"WINEPREFIX={wine_prefix_path} wine reg delete 'HKEY_CURRENT_USER\Software\Wine\AppDefaults\RobloxApp.exe\DllOverrides' /v dinput /f"
-                    self.run_command(dinput_remove_command, "Removing dinput override")
-
-                    # Inform user about virtual desktop removal
-                    messagebox.showinfo("Virtual Desktop", "The fixes have been removed. If you still see a virtual desktop, please run 'winecfg' and disable it from the 'Graphics' tab.")
-                else:
-                    self.set_status("Operation cancelled.", "orange")
-            else:
-                # Apply all three fixes
-                self.run_command(f"WINEPREFIX={wine_prefix_path} winetricks mwo=force", "Applying MouseWarpOverride fix")
-                self.run_command(f"WINEPREFIX={wine_prefix_path} winetricks dinput8", "Applying dinput override fix")
-
-                # Launch winecfg for virtual desktop
-                messagebox.showinfo("Virtual Desktop", "Please go to the 'Graphics' tab and enable 'Emulate a virtual desktop' to fix the cursor issue. Choose a suitable resolution (e.g., 1024x768 or 1280x720) then click 'OK'.")
-                self.run_command(f"WINEPREFIX={wine_prefix_path} winecfg", "Launching Wine Configuration for Virtual Desktop")
-
-                self.set_status("Camera and mouse fixes applied. Please configure the virtual desktop in the pop-up window.", "green")
-
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to check/apply fixes: {e}")
-            self.set_status("Error applying fixes.", "red")
-            
     def run_installation_thread(self):
         thread = Thread(target=self.install_sequence)
         thread.daemon = True
@@ -399,37 +300,6 @@ This launcher would not be possible without the following open-source projects a
         thread = Thread(target=self.run_play)
         thread.daemon = True
         thread.start()
-    
-    def run_play_threaded(self):
-        # A new function to run the original play logic, to avoid recursion with the popup
-        thread = Thread(target=self._launch_game_after_popup)
-        thread.daemon = True
-        thread.start()
-
-    def _launch_game_after_popup(self):
-        selected_version = self.version_var.get()
-        app_folder = self.download_and_extract(selected_version)
-        if not app_folder:
-            return
-
-        executable_name = EXECUTABLE_PATHS.get(selected_version)
-        APP_PATH = os.path.join(app_folder, executable_name)
-
-        if not os.path.exists(APP_PATH):
-            self.set_status("Error: Executable not found. Please check the folder.", "red")
-            messagebox.showerror("Error", f"Executable '{APP_PATH}' not found. The app folder may be corrupted. Use 'Open Client Folder' to check the path.")
-            return
-
-        self.set_status("Launching game...")
-        wine_prefix_path = os.path.expanduser(f"~/{WINE_PREFIX_NAME}")
-        if not os.path.exists(wine_prefix_path):
-            self.set_status("Error: Wine prefix not found. Please run installation first.", "red")
-            messagebox.showerror("Error", "Wine prefix not found. Please run the 'Install/Update' option first.")
-            return
-
-        os.environ['WINEPREFIX'] = wine_prefix_path
-        self.run_command(f"wine \"{APP_PATH}\"", f"Starting the game for {selected_version}")
-        self.set_status("Game launched. Check terminal for output.", "blue")
 
 if __name__ == "__main__":
     app = App()
